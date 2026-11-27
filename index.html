@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>月下庭园</title>
+    <meta name="description" content="一夜的庭园塔防。以石灯、竹林、梅霜、泉眼与朱印，守住月色。" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <div id="stage">
+      <canvas id="game" aria-label="月下庭园"></canvas>
+
+      <div id="title-layer" class="layer">
+        <div class="title-col">
+          <div class="scroll">
+            <div class="rod"></div>
+            <h1>月下庭园</h1>
+            <div class="stamp" aria-hidden="true">月</div>
+            <div class="rod bottom"></div>
+          </div>
+          <p class="subtitle">墨色沿石径而来<br />请在月落之前守住这座庭园</p>
+          <button id="btn-start" class="seal-btn" type="button">入园</button>
+          <div class="title-links">
+            <button id="btn-guide" class="text-btn" type="button">园规</button>
+            <button id="btn-mute-title" class="text-btn" type="button">声 开</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="hud" class="layer" hidden>
+        <div class="top-left">
+          <div class="chip coin-chip">
+            <span class="cash" aria-hidden="true"></span>
+            <div>
+              <span>铜钱</span>
+              <b id="gold">0</b>
+            </div>
+          </div>
+          <div class="chip" id="lives-chip">
+            <span>月华</span>
+            <b id="lives">22</b>
+          </div>
+        </div>
+        <div class="top-center">
+          <div class="wave-chip">
+            <span id="wave-index">下一波 1</span>
+            <strong id="wave-name">初萤</strong>
+            <em id="wave-hint"></em>
+            <div id="preview"></div>
+            <button id="btn-call" type="button">启波</button>
+            <small id="call-note"></small>
+          </div>
+        </div>
+        <div class="top-right">
+          <button id="btn-speed" class="lacquer" type="button">常速</button>
+          <button id="btn-pause" class="lacquer" type="button">暂停</button>
+          <button id="btn-mute" class="lacquer" type="button">声</button>
+          <button id="btn-guide-hud" class="lacquer ghost" type="button">园规</button>
+        </div>
+        <div id="boss" hidden>
+          <span>月噬</span>
+          <div class="track"><div id="boss-fill"></div></div>
+        </div>
+        <div id="banner" class="banner" hidden>
+          <span id="banner-kicker"></span>
+          <strong id="banner-name"></strong>
+        </div>
+        <div id="hint" class="slip">
+          <p>先择庭器，再点石台。弯处照得更久。</p>
+          <button id="hint-close" type="button" aria-label="关闭提示">×</button>
+        </div>
+        <div id="toast" class="toast" hidden></div>
+        <section id="detail" class="sheet" hidden>
+          <div>
+            <h2 id="d-name"></h2>
+            <p id="d-role" class="role"></p>
+            <p id="d-flavor"></p>
+            <p id="d-stats"></p>
+          </div>
+          <div class="sheet-actions">
+            <button id="btn-up" class="paper" type="button">升级</button>
+            <button id="btn-sell" class="paper quiet" type="button">出售</button>
+          </div>
+        </section>
+        <div id="dock">
+          <div id="cards"></div>
+        </div>
+      </div>
+
+      <div id="pause-layer" class="layer veil" hidden>
+        <div class="sheet modal">
+          <p class="eyebrow">暂歇</p>
+          <h2>灯还亮着</h2>
+          <p>庭园停在这一息里。墨色不会趁你不备往前走。</p>
+          <div class="stack">
+            <button id="btn-resume" class="paper" type="button">继续</button>
+            <button id="btn-restart" class="paper quiet" type="button">重开此夜</button>
+            <button id="btn-guide-pause" class="paper quiet" type="button">园规</button>
+            <button id="btn-mute-pause" class="paper quiet" type="button">静音</button>
+            <button id="btn-quit" class="text-btn" type="button">离园</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="end-layer" class="layer veil" hidden>
+        <div class="sheet modal">
+          <p id="end-kicker" class="eyebrow"></p>
+          <h2 id="end-title"></h2>
+          <p id="end-poem"></p>
+          <p id="end-stats" class="stats"></p>
+          <div class="stack">
+            <button id="btn-retry" class="paper" type="button">再守一夜</button>
+            <button id="btn-home" class="text-btn" type="button">回到园门</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="guide-layer" class="layer veil" hidden>
+        <div class="sheet modal guide">
+          <p class="eyebrow">园规</p>
+          <h2>如何守园</h2>
+          <p>敌人只沿石径走。它们穿过东侧月门，便损去你的月华。月华尽时，这一夜就结束了。</p>
+          <p>石台可以放置庭器。弯道通常照得到更长的一段路，放置前能看见射程。</p>
+          <ul>
+            <li><b>石灯</b>　单体点射，守园的主干。</li>
+            <li><b>竹林</b>　让范围内的敌人慢下来。</li>
+            <li><b>梅霜</b>　使敌人更易受伤，并再缓一缓。它会优先找最耐打的那只。</li>
+            <li><b>泉眼</b>　水纹溅开，伤及挤在一起的一群。</li>
+            <li><b>朱印</b>　提升附近庭器的威力。两印只取较强的一枚，第三阶会迸出朱火。</li>
+          </ul>
+          <p>铜钱用来购买与升级。出售返还六成。波次到来前可以提前启波，得一点额外铜钱。</p>
+          <ul>
+            <li><b>纸鹤</b>　折得很快，竹叶几乎留不住。</li>
+            <li><b>游灯</b>　会自己愈合，石灯的灼烧能止住它。</li>
+            <li><b>墨蛟</b>　又长又韧。漏过园门，月华掉得更多。</li>
+          </ul>
+          <p>这一夜有二十二波。末波的月噬若走到东侧月门，庭园即告失守。</p>
+          <p class="keys">空格启波　U 升级　X 出售　Esc 暂停　F 疾行　M 静音　1 到 5 选择庭器　右键出售</p>
+          <button id="btn-guide-close" class="paper" type="button">知道了</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
