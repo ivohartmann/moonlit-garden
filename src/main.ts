@@ -106,11 +106,7 @@ function startRun(): void {
 }
 
 const sync = mountUi({
-  arm: (kind) => {
-    if (match.phase !== 'prepare' && match.phase !== 'combat') return;
-    armed = armed === kind ? null : kind;
-    if (armed) selectedId = null;
-  },
+  arm: (kind) => armKind(kind),
   upgrade: () => {
     if (selectedId === null) return;
     if (!tryUpgrade(match, selectedId)) notify('铜钱不足');
@@ -141,6 +137,13 @@ const sync = mountUi({
     hint = false;
   },
 });
+
+function armKind(kind: TowerKind): void {
+  if (match.phase !== 'prepare' && match.phase !== 'combat') return;
+  mixer.play('click');
+  armed = armed === kind ? null : kind;
+  if (armed) selectedId = null;
+}
 
 function localPoint(event: PointerEvent): { x: number; y: number } {
   const rect = canvas.getBoundingClientRect();
@@ -245,10 +248,7 @@ window.addEventListener('keydown', (event) => {
   }
   const index = Number(event.key) - 1;
   const kind = TOWER_ORDER[index];
-  if (kind && playing()) {
-    armed = armed === kind ? null : kind;
-    if (armed) selectedId = null;
-  }
+  if (kind && playing()) armKind(kind);
 });
 
 function fit(): void {

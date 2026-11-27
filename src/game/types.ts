@@ -167,9 +167,12 @@ export type SfxName =
   | 'place'
   | 'upgrade'
   | 'sell'
+  | 'lantern'
+  | 'bamboo'
   | 'pond'
   | 'frost'
   | 'burst'
+  | 'hit'
   | 'kill'
   | 'leak'
   | 'wave'
@@ -177,7 +180,8 @@ export type SfxName =
   | 'defeat'
   | 'gold'
   | 'early'
-  | 'boss';
+  | 'boss'
+  | 'click';
 
 export type Stats = {
   kills: number;

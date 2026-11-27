@@ -57,11 +57,41 @@ function iconCanvas(kind: TowerKind | EnemyKind, enemy: boolean): HTMLCanvasElem
 
 export function mountUi(hooks: UiHooks): (match: Match, hud: HudState) => void {
   const cards = byId<HTMLDivElement>('cards');
+  const tip = document.createElement('aside');
+  tip.id = 'card-tip';
+  tip.hidden = true;
+  tip.setAttribute('role', 'tooltip');
+  const tipHead = document.createElement('div');
+  tipHead.className = 'tip-head';
+  const tipName = document.createElement('strong');
+  const tipRole = document.createElement('span');
+  const tipFlavor = document.createElement('p');
+  const tipNow = document.createElement('p');
+  tipNow.className = 'tip-line';
+  const tipLater = document.createElement('p');
+  tipLater.className = 'tip-line';
+  tipHead.append(tipName, tipRole);
+  tip.append(tipHead, tipFlavor, tipNow, tipLater);
+  cards.before(tip);
+
+  let hoverKind: TowerKind | null = null;
+  let focusKind: TowerKind | null = null;
+
+  function fillTip(kind: TowerKind): void {
+    const def = TOWERS[kind];
+    tipName.textContent = def.name;
+    tipRole.textContent = def.role;
+    tipFlavor.textContent = def.flavor;
+    tipNow.textContent = `初置　${statLine(kind, 1)}　·　${buyCost(kind)} 铜钱`;
+    tipLater.textContent = `三阶　${statLine(kind, 3)}`;
+  }
+
   for (const kind of TOWER_ORDER) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'card';
     button.dataset.kind = kind;
+    button.setAttribute('aria-describedby', 'card-tip');
     const def = TOWERS[kind];
     button.append(iconCanvas(kind, false));
     const name = document.createElement('span');
@@ -74,6 +104,18 @@ export function mountUi(hooks: UiHooks): (match: Match, hud: HudState) => void {
     cost.className = 'card-cost';
     cost.textContent = String(buyCost(kind));
     button.append(name, role, cost);
+    button.addEventListener('pointerenter', () => {
+      hoverKind = kind;
+    });
+    button.addEventListener('pointerleave', () => {
+      if (hoverKind === kind) hoverKind = null;
+    });
+    button.addEventListener('focus', () => {
+      focusKind = kind;
+    });
+    button.addEventListener('blur', () => {
+      if (focusKind === kind) focusKind = null;
+    });
     button.addEventListener('click', () => hooks.arm(kind));
     cards.append(button);
   }
@@ -103,6 +145,13 @@ export function mountUi(hooks: UiHooks): (match: Match, hud: HudState) => void {
 
   return (match, hud) => {
     const playing = match.phase === 'prepare' || match.phase === 'combat' || match.phase === 'paused';
+    const shown = playing ? (hoverKind ?? focusKind ?? hud.armed) : null;
+    if (shown) {
+      fillTip(shown);
+      tip.hidden = false;
+    } else {
+      tip.hidden = true;
+    }
     byId('title-layer').hidden = match.phase !== 'title';
     byId('hud').hidden = !playing;
     byId('pause-layer').hidden = match.phase !== 'paused' || hud.guide;

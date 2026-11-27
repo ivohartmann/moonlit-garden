@@ -460,6 +460,7 @@ function impactFrost(m: Match, enemy: Enemy, shot: Shot, scale: number): void {
   if (shot.vuln > 0 || shot.slow > 0) applyFrost(enemy, shot.slow, shot.vuln, shot.dur);
   if (shot.burn > 0) applyBurn(enemy, shot.burn, shot.burnTime);
   burst(m, enemy.x, enemy.y, shot.kind === 'frost' ? '#d5e6f4' : '#f0d59a', 4, 40, 'dot', 0.28);
+  sfx(m, 'hit');
 }
 
 function resolveShot(m: Match, shot: Shot): void {
@@ -536,17 +537,40 @@ function moveShots(m: Match, dt: number): void {
   m.shots = m.shots.filter((s) => s.alive);
 }
 
+function enemiesInRange(m: Match, x: number, y: number, range: number): boolean {
+  for (const enemy of living(m)) {
+    if (dist(x, y, enemy.x, enemy.y) <= range) return true;
+  }
+  return false;
+}
+
 function towersAct(m: Match, dt: number): void {
   for (const tower of m.towers) {
     const spec = towerLevel(tower.kind, tower.level);
     if (tower.kind === 'bamboo') {
-      if (spec.tick <= 0) continue;
-      tower.acc += dt;
-      if (tower.acc < spec.tickEvery) continue;
-      tower.acc = 0;
-      const raw = spec.tick * (1 + tower.buff);
-      for (const enemy of living(m)) {
-        if (dist(tower.x, tower.y, enemy.x, enemy.y) <= spec.range) hurt(enemy, raw);
+      let struck = false;
+      if (spec.tick > 0) {
+        tower.acc += dt;
+        if (tower.acc >= spec.tickEvery) {
+          tower.acc = 0;
+          const raw = spec.tick * (1 + tower.buff);
+          for (const enemy of living(m)) {
+            if (dist(tower.x, tower.y, enemy.x, enemy.y) <= spec.range) {
+              hurt(enemy, raw);
+              struck = true;
+            }
+          }
+        }
+      }
+      if (struck) {
+        sfx(m, 'bamboo');
+        tower.cd = 1.2;
+      } else if (enemiesInRange(m, tower.x, tower.y, spec.range)) {
+        tower.cd -= dt;
+        if (tower.cd <= 0) {
+          tower.cd = 1.2;
+          sfx(m, 'bamboo');
+        }
       }
       continue;
     }
@@ -555,15 +579,13 @@ function towersAct(m: Match, dt: number): void {
       tower.cd -= dt;
       if (tower.cd > 0) continue;
       tower.cd = spec.burstEvery;
-      let hit = false;
       for (const enemy of living(m)) {
         if (dist(tower.x, tower.y, enemy.x, enemy.y) <= spec.range + enemy.radius * 0.2) {
           hurt(enemy, spec.burst);
-          hit = true;
         }
       }
       ring(m, tower.x, tower.y, spec.range * 0.45, '#c04b3e', 0.4);
-      if (hit) sfx(m, 'burst');
+      sfx(m, 'burst');
       continue;
     }
 
@@ -615,7 +637,7 @@ function towersAct(m: Match, dt: number): void {
       alive: true,
     };
     m.shots.push(shot);
-    if (tower.kind === 'frost') sfx(m, 'frost');
+    sfx(m, tower.kind === 'frost' ? 'frost' : 'lantern');
   }
 }
 
