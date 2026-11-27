@@ -4,7 +4,7 @@
 
 ## 在线游玩
 
-浏览器打开：[https://ivohartmann.github.io/-/](https://ivohartmann.github.io/-/)
+浏览器打开：[https://ivohartmann.github.io/moonlit-garden/](https://ivohartmann.github.io/moonlit-garden/)
 
 ## 本地运行
 
